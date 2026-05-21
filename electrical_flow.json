@@ -1,0 +1,45 @@
+function advancedVoltageMonitoring() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  
+  // Replace with your real email address to test the notification
+  var adminEmail = "wongsakorn.sertsandee@gmail.com"; 
+  
+  // Data starts from Row 2 (Row 1 is headers), total of 3 rows to process
+  var startRow = 2;
+  var totalRows = 3; 
+  
+  for (var i = startRow; i <= startRow + totalRows - 1; i++) {
+    var location = sheet.getRange(i, 1).getValue(); 
+    var voltage = sheet.getRange(i, 2).getValue();  
+    var statusRange = sheet.getRange(i, 3);         
+    
+    // Get the current system timestamp
+    var currentTime = new Date();
+    var formattedTime = Utilities.formatDate(currentTime, "GMT+3", "yyyy-MM-dd HH:mm:ss");
+    
+    // Automation Threshold Logic for Power Quality
+    if (voltage < 210 || voltage > 230) {
+      var issueType = (voltage < 210) ? "Under-voltage" : "Over-voltage";
+      
+      // 1. Update Status and Background Color in Google Sheets (Red Alert)
+      statusRange.setValue("❌ CRITICAL: " + issueType + " (Checked at: " + formattedTime + ")");
+      statusRange.setBackground("#ffcccc"); 
+      
+      // 2. Automated Real-time Email Notification Trigger
+      var emailSubject = "⚠️ ALERT: Voltage Anomaly Detected at " + location;
+      var emailBody = "Automated System Notification:\n\n" +
+                      "📍 Location/Node: " + location + "\n" +
+                      "⚡ Measured Voltage: " + voltage + " V\n" +
+                      "🚨 Status: " + issueType + "\n" +
+                      "⏰ Timestamp: " + formattedTime + "\n\n" +
+                      "Action Required: Please dispatch an electrical technician to inspect the node immediately.";
+                      
+      MailApp.sendEmail(adminEmail, emailSubject, emailBody);
+    } 
+    else {
+      // 1. Update Status and Background Color for Normal Condition (Green Status)
+      statusRange.setValue("✅ NORMAL (Checked at: " + formattedTime + ")");
+      statusRange.setBackground("#d9ead3"); 
+    }
+  }
+}
